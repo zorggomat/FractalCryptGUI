@@ -1,0 +1,17 @@
+language: cpp
+os: linux
+
+compiler:
+  - clang
+  - gcc
+  
+before_install:
+  # Adding new ubuntu repositories to download the current version of qt
+  - sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse"
+  - sudo apt-get update
+  - sudo apt-get -y install qt5-default qt5-qmake qtbase5-dev-tools libssl-dev zlib1g-dev qtchooser libqt5core5a qtbase-abi-5-12-8
+
+script:
+  - qmake -project
+  - qmake FractalCrypt.pro
+  - make
