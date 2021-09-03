@@ -36,7 +36,8 @@ In addition, a file encrypted in such a way, unlike, let us say, a cryptocontain
 
 ## How does FractalCrypt work?
 First, it creates a cryptocontainer of a user-specified size, filled with random characters. To create the first volume, the program archives the user-specified files to the beginning of the cryptocontainer and encrypts it using the first key. Thus, knowing the first key, you can access the first-layer files and the rest of the cryptocontainer.
-[picture]
+
+<div align="center"><img src="https://i.ibb.co/FqY309M/file-struct.png"></div>
 
 To create the second volume, the program will archive the files in the rest of the cryptocontainer and encrypt it with the second key; So, the first key is also needed to create or access data from the second volume.
 
@@ -48,6 +49,15 @@ In order to get N-layer files, the user must enter N passwords.
 To add a new layer (also referred to as a volume) without risk (i.e., overwriting the noise), you should enter all the keys; otherwise, if you enter only a part of the keys, the new layer will be written over the encrypted data.
 
 The user can also delete a layer, in this case it is overwritten with noise; All layers over it are removed as well, so only the top layer can be safely removed.
+
+## Screenshots
+<details>
+  <summary>Show</summary>
+  <p>Startup window</p><img src="https://i.ibb.co/qyNXL68/1.png"><br>
+  <p>Creating new container</p><img src="https://i.ibb.co/LxFWNx2/2.png"><br>
+  <p>Main window. Two passwords are entered, so it is possible to get the files of the second volume or create a third one </p><br><img src="https://i.ibb.co/gvXXJSZ/3.png">
+  <p>Archive creation window</p><img src="https://i.ibb.co/7tNHd3v/4.png"><br>
+</details>
 
 ## Technical details 
 AES-256 is used for encryption in CBC mode. SHA256 hash sum of password in utf8 is used as a key, md5 hash sum is used as an initialization vector (this may be insecure if the same password is used for several volumes).
