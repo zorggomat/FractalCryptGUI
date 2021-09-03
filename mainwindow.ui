@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>FractalCrypt</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/img/logo.png</normaloff>:/img/logo.png</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QPlainTextEdit" name="passwordsTextEdit">
     <property name="geometry">
@@ -107,6 +111,8 @@
    </property>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>
