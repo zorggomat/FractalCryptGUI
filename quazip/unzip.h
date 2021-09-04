@@ -53,7 +53,11 @@ extern "C" {
 #endif
 
 #ifndef _ZLIB_H
-#include "zlib.h"
+#ifdef unix
+#include <zlib.h>
+#else
+#include <QtZlib/zlib.h>
+#endif
 #endif
 
 #ifndef  _ZLIBIOAPI_H

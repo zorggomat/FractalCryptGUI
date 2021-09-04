@@ -52,8 +52,8 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     qint64 additional = size % bufferSize;
     emit setMaximumValue(parts);
 
-    unsigned char buffer[bufferSize];
-    unsigned char outBuffer[bufferSize];
+    unsigned char *buffer = new unsigned char[bufferSize];
+    unsigned char *outBuffer = new unsigned char[bufferSize];
 
     int len = 0;
 
@@ -75,6 +75,8 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     file->write((char*)outBuffer, additional);
 
     EVP_CIPHER_CTX_free(ctx);
+    delete[] buffer;
+    delete[] outBuffer;
     emit finished();
     return true;
 }
@@ -92,8 +94,8 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     qint64 additional = size % bufferSize;
     emit setMaximumValue(parts);
 
-    unsigned char buffer[bufferSize+16];
-    unsigned char outBuffer[bufferSize+16];
+    unsigned char *buffer = new unsigned char[bufferSize+16];
+    unsigned char *outBuffer = new unsigned char[bufferSize+16];
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if(!ctx) return false;
@@ -119,6 +121,8 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     file->write((char*)outBuffer, len);
 
     EVP_CIPHER_CTX_free(ctx);
+    delete[] buffer;
+    delete[] outBuffer;
     emit finished();
     return true;
 }

@@ -1,6 +1,6 @@
 #include "fractalcryptcore.h"
 
-const char FractalCryptCore::signature[8];
+const constexpr char FractalCryptCore::signature[8];
 
 FractalCryptCore::FractalCryptCore()
 {

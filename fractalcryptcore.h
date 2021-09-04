@@ -43,7 +43,7 @@ public:
         NewSizeTooSmall
     };
 
-    static constexpr char signature[8] = "fractal";
+    static const constexpr char signature[8] = "fractal";
 
     static FractalCryptCore& Instance();
 

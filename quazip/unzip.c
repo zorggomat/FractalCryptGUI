@@ -62,6 +62,8 @@
 
   Jan-2010 - back to unzip and minizip 1.0 name scheme, with compatibility layer
 
+  2021 - unzOpenInternal - added the ability to search for EOCDs from a specific index
+
   Copyright (C) 1998 - 2010 Gilles Vollant, Even Rouault, Mathias Svensson
 
 */
