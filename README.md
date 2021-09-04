@@ -68,6 +68,10 @@ Each layer, when decrypted, has the following header:
 
 8 bytes - the length of the subsequent zip archive in big endian, aligned to 16 bytes
 
+## Contributing
+
+PR and contributions are welcomed. If you have a contribution in mind, please check out the [Contribution Guide](https://github.com/zorggish/FractalCryptGUI/blob/master/CONTRIBUTING.md) for information on how to do so.
+
 ## Building
 FractalCrypt uses the [Qt framework](https://account.qt.io/downloads)(downloading from the official site requires registration), the [OpenSSL library](https://www.openssl.org/) for encryption, and the [QuaZip library](http://quazip.sourceforge.net/) for Zip archives creation.
 
@@ -96,7 +100,7 @@ sudo apt-get install qt5-default qt5-qmake qtbase5-dev-tools qtchooser libqt5cor
 ```
 2. Clone this repo
 ```
-git clone https://github.com/zorggish/FractalCrypt.git
+git clone https://github.com/zorggish/FractalCryptGUI.git
 cd FractalCrypt
 ```
 3. Build and run project
