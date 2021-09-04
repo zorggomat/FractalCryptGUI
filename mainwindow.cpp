@@ -63,7 +63,7 @@ void MainWindow::getFilesButtonClicked()
     QString path = QFileDialog::getExistingDirectory();
     if(path.isEmpty()) return;
 
-    FractalCryptCore::StatusCode r = FractalCryptCore::readLayer(containerPath, path, getPasswords());
+    FractalCryptCore::StatusCode r = FractalCryptCore::Instance().readLayer(containerPath, path, getPasswords());
 
     if(r == FractalCryptCore::OK)
         QMessageBox::about(nullptr, "Result", FractalCryptCore::getCodeDescription(r));
@@ -80,7 +80,7 @@ void MainWindow::removeLayerButtonClicked()
     if(confirmBox->exec() != QMessageBox::Yes)
         return;
 
-    FractalCryptCore::StatusCode r = FractalCryptCore::removeLayer(containerPath, getPasswords());
+    FractalCryptCore::StatusCode r = FractalCryptCore::Instance().removeLayer(containerPath, getPasswords());
 
     if(r == FractalCryptCore::OK)
         QMessageBox::about(nullptr, "Result", FractalCryptCore::getCodeDescription(r));

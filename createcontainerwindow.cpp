@@ -34,11 +34,15 @@ void CreateContainerWindow::createButtonClicked()
         QMessageBox::critical(this, "Error", "Unable to open the file");
         return;
     }
-    FractalCryptCore::createNoize(file, bytes);
-    QByteArray key = FractalCryptCore::generateRandomPassword();
-    if(!FractalCryptCore::encryptFilePart(file, 0, bytes, key))
+    FractalCryptCore &fractalCryptCore = FractalCryptCore::Instance();
+    fractalCryptCore.createNoize(&file, bytes);
+    QStringList passwords = {""};
+    QVector<qint64> offsets = {0};
+
+    FractalCryptCore::StatusCode r = fractalCryptCore.encryptFile(&file, passwords, offsets);
+    if(r != FractalCryptCore::OK)
     {
-        QMessageBox::critical(this, "Error", "Encryption error");
+        QMessageBox::critical(this, "Error", FractalCryptCore::getCodeDescription(r));
         return;
     }
 

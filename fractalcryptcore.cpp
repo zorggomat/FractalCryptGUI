@@ -1,124 +1,82 @@
 #include "fractalcryptcore.h"
 
-using namespace FractalCryptCore;
+const char FractalCryptCore::signature[8];
 
-void FractalCryptCore::createNoize(QIODevice &iodevice, qint64 bytes)
+FractalCryptCore::FractalCryptCore()
 {
-    QDataStream stream(&iodevice);
-    QRandomGenerator random = QRandomGenerator::securelySeeded();
-    for(qint64 i = 0; i < bytes; ++i)
-        stream << (qint8)random.generate();
+    loop = new QEventLoop;
+    progressDialog = new ProgressDialog();
+    noizeCreator = new NoizeCreator();
+    noizeCreator->setAutoDelete(false);
+    aes = new AES();
+    aes->setAutoDelete(false);
+
+    QObject::connect(noizeCreator, &NoizeCreator::started, progressDialog, &ProgressDialog::start);
+    QObject::connect(noizeCreator, &NoizeCreator::setMaximumValue, progressDialog, &ProgressDialog::setMaximum);
+    QObject::connect(noizeCreator, &NoizeCreator::updateValue, progressDialog, &ProgressDialog::setValue);
+    QObject::connect(noizeCreator, &NoizeCreator::finished, progressDialog, &ProgressDialog::quit);
+    QObject::connect(noizeCreator, &NoizeCreator::finished, loop, &QEventLoop::quit);
+
+    QObject::connect(aes, &AES::started, progressDialog, &ProgressDialog::start);
+    QObject::connect(aes, &AES::setMaximumValue, progressDialog, &ProgressDialog::setMaximum);
+    QObject::connect(aes, &AES::updateValue, progressDialog, &ProgressDialog::setValue);
+    QObject::connect(aes, &AES::finished, progressDialog, &ProgressDialog::quit);
+    QObject::connect(aes, &AES::finished, loop, &QEventLoop::quit);
 }
 
-bool FractalCryptCore::encryptFilePart(QIODevice &file, qint64 pos, qint64 end, const QByteArray &key)
+FractalCryptCore::~FractalCryptCore()
 {
-    QByteArray hashedKey = QCryptographicHash::hash(key, QCryptographicHash::Sha256);
-    QByteArray iv = QCryptographicHash::hash(key, QCryptographicHash::Md5);
-
-    file.seek(pos);
-
-    qint64 bufferSize = 4096;
-    qint64 size = end - pos;
-    qint64 parts = size / bufferSize;
-    qint64 additional = size % bufferSize;
-
-    unsigned char buffer[bufferSize];
-    unsigned char outBuffer[bufferSize];
-
-    int len = 0;
-
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if(!ctx) return false;
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (unsigned char*)hashedKey.data(), (unsigned char*)iv.data())) return false;
-
-    for(int i = 0; i < parts; ++i)
-    {
-        file.read((char*)buffer, bufferSize);
-        if(1 != EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, bufferSize)) return false;
-        file.seek(pos + i * bufferSize);
-        file.write((char*)outBuffer, bufferSize);
-    }
-    file.read((char*)buffer, additional);
-    if(1 != EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, additional)) return false;
-    file.seek(pos + parts * bufferSize);
-    file.write((char*)outBuffer, additional);
-
-    EVP_CIPHER_CTX_free(ctx);
-    return true;
+    delete progressDialog;
+    delete noizeCreator;
 }
 
-bool FractalCryptCore::decryptFilePart(QIODevice &file, qint64 pos, qint64 end, const QByteArray &key)
+FractalCryptCore& FractalCryptCore::Instance()
 {
-    QByteArray hashedKey = QCryptographicHash::hash(key, QCryptographicHash::Sha256);
-    QByteArray iv = QCryptographicHash::hash(key, QCryptographicHash::Md5);
-
-    file.seek(pos);
-
-    qint64 size = end - pos;
-    qint64 bufferSize = 4096;
-    qint64 parts = size / bufferSize;
-    qint64 additional = size % bufferSize;
-
-    unsigned char buffer[bufferSize+16];
-    unsigned char outBuffer[bufferSize+16];
-
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    if(!ctx) return false;
-    if(!EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (unsigned char*)hashedKey.data(), (unsigned char*)iv.data())) return false;
-
-    int len = 0;
-
-    file.read((char*)buffer, 16);
-    if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, 16)) return false;
-    for(int i = 0; i < parts; ++i)
-    {
-        file.seek(pos + 16 + i * bufferSize);
-        file.read((char*)buffer, bufferSize);
-        if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, bufferSize)) return false;
-        file.seek(pos + i * bufferSize);
-        file.write((char*)outBuffer, bufferSize);
-    }
-    file.seek(pos + 16 + parts * bufferSize);
-    file.read((char*)buffer, additional);
-    if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, additional)) return false;
-    file.seek(pos + parts * bufferSize);
-    file.write((char*)outBuffer, len);
-
-    EVP_CIPHER_CTX_free(ctx);
-    return true;
+    static FractalCryptCore instance;
+    return instance;
 }
 
-QByteArray FractalCryptCore::generateRandomPassword()
+void FractalCryptCore::createNoize(QIODevice *iodevice, qint64 bytes)
 {
-    QRandomGenerator *random = QRandomGenerator::global();
-    QByteArray result(32, Qt::Initialization::Uninitialized);
-    random->generate(result.begin(), result.end());
-    return result;
+    progressDialog->setText("Filling the container with random characters...");
+    noizeCreator->setDevice(iodevice);
+    noizeCreator->setNumberOfBytes(bytes);
+    QThreadPool::globalInstance()->start(noizeCreator);
+    loop->exec();
 }
 
-StatusCode FractalCryptCore::encryptFile(QIODevice &file, QStringList passwords, const QVector<qint64> &offsets)
+FractalCryptCore::StatusCode FractalCryptCore::encryptFile(QIODevice *file, QStringList passwords, const QVector<qint64> &offsets)
 {
+    aes->setIODevice(file);
+    aes->setMode(Encrypt);
     for(int i = passwords.size()-1; i >= 0; --i)
     {
-        QByteArray key = passwords[i].toUtf8();
-        if(!encryptFilePart(file, offsets[i], file.size(), key))
-            return EncryptionError;
+        progressDialog->setText("Encrypting layer " + QString::number(i+1));
+        aes->setRange(offsets[i], file->size());
+        aes->setPassword(passwords[i]);
+        QThreadPool::globalInstance()->start(aes);
+        loop->exec();
     }
     return OK;
 }
 
-StatusCode FractalCryptCore::decryptFile(QIODevice &file, QStringList passwords, QVector<qint64> &offsets)
+FractalCryptCore::StatusCode FractalCryptCore::decryptFile(QIODevice *file, QStringList passwords, QVector<qint64> &offsets)
 {
     qint64 pos = 0;
-    qint64 fileSize = file.size();
+    qint64 fileSize = file->size();
     offsets.push_back(0);
+
+    aes->setIODevice(file);
+    aes->setMode(Decrypt);
 
     for(int i = 0; i < passwords.size(); ++i)
     {
         //Decrypt layer
-        QByteArray key = passwords.at(i).toUtf8();
-        if(!decryptFilePart(file, pos, fileSize, key))
-            return EncryptionError;
+        progressDialog->setText("Decrypting layer " + QString::number(i+1));
+        aes->setRange(pos, fileSize);
+        aes->setPassword(passwords.at(i).toUtf8());
+        QThreadPool::globalInstance()->start(aes);
+        loop->exec();
 
         //Read header
         qint64 layerSize;
@@ -145,7 +103,7 @@ StatusCode FractalCryptCore::decryptFile(QIODevice &file, QStringList passwords,
     return OK;
 }
 
-StatusCode FractalCryptCore::resizeFile(QString path, QStringList passwords, qint64 newSize)
+FractalCryptCore::StatusCode FractalCryptCore::resizeFile(QString path, QStringList passwords, qint64 newSize)
 {
     QFile file(path);
     if(!file.open(QIODevice::ReadWrite)) return ContainerUnavailable;
@@ -154,13 +112,13 @@ StatusCode FractalCryptCore::resizeFile(QString path, QStringList passwords, qin
     if(newSize == currentSize) return OK;
 
     QVector<qint64> offsets;
-    StatusCode r = decryptFile(file, passwords, offsets);
+    StatusCode r = decryptFile(&file, passwords, offsets);
     if(r != OK) return r;
 
     if(offsets.back() > newSize)
     {
         offsets.pop_back();
-        encryptFile(file, passwords, offsets);
+        encryptFile(&file, passwords, offsets);
         return NewSizeTooSmall;
     }
     if(newSize < currentSize)
@@ -170,13 +128,13 @@ StatusCode FractalCryptCore::resizeFile(QString path, QStringList passwords, qin
     else
     {
         file.seek(currentSize);
-        createNoize(file, newSize - currentSize);
+        createNoize(&file, newSize - currentSize);
     }
     offsets.pop_back();
-    return encryptFile(file, passwords, offsets);;
+    return encryptFile(&file, passwords, offsets);;
 }
 
-StatusCode FractalCryptCore::writeLayer(QString containerPath, QStringList files, QStringList directories, QStringList passwords, QString newPassword)
+FractalCryptCore::StatusCode FractalCryptCore::writeLayer(QString containerPath, QStringList files, QStringList directories, QStringList passwords, QString newPassword)
 {
     //Open, decrypt and prepare container
     QFile container(containerPath);
@@ -184,7 +142,7 @@ StatusCode FractalCryptCore::writeLayer(QString containerPath, QStringList files
     qint64 containerSize = container.size();
 
     QVector<qint64> offsets;
-    StatusCode r = decryptFile(container, passwords, offsets);
+    StatusCode r = decryptFile(&container, passwords, offsets);
     if(r != OK) return r;
     container.close();
 
@@ -193,71 +151,70 @@ StatusCode FractalCryptCore::writeLayer(QString containerPath, QStringList files
     if(!QuazipFunctions::writeZip(containerPath, offsets.back() + 16, files, directories, size))
     {
         offsets.pop_back();
-        encryptFile(container, passwords, offsets);
+        encryptFile(&container, passwords, offsets);
         return ZipError;
     }
     if(container.size() > containerSize)
     {
         container.resize(containerSize);
         container.open(QIODevice::ReadWrite);
-        //createNoize(container, container.size() - offsets.back());
-        passwords.push_back(generateRandomPassword());
-        encryptFile(container, passwords, offsets);
+        passwords.push_back("");
+        encryptFile(&container, passwords, offsets);
         return NotEnoughSpace;
     }
 
     //Write header
     container.open(QIODevice::ReadWrite);
-    writeHeader(container, offsets.back(), size);
+    writeHeader(&container, offsets.back(), size);
 
     //Encrypt and close container
     passwords.push_back(newPassword);
-    return encryptFile(container, passwords, offsets);
+    return encryptFile(&container, passwords, offsets);
 }
 
-StatusCode FractalCryptCore::readLayer(QString containerPath, QString filePath, QStringList passwords)
+FractalCryptCore::StatusCode FractalCryptCore::readLayer(QString containerPath, QString filePath, QStringList passwords)
 {
     //Open, decrypt and prepare container
     QFile container(containerPath);
     if(!container.open(QIODevice::ReadWrite)) return ContainerUnavailable;
     QVector<qint64> offsets;
-    StatusCode r = decryptFile(container, passwords, offsets);
+    StatusCode r = decryptFile(&container, passwords, offsets);
     if (r != OK) return r;
     offsets.pop_back();
 
     //Get size
     qint64 layerSize;
-    if(readHeader(container, offsets.back(), layerSize) != OK)
+    if(readHeader(&container, offsets.back(), layerSize) != OK)
     {
-        encryptFile(container, passwords, offsets);
+        encryptFile(&container, passwords, offsets);
         return SignatureInvalid;
     }
     if(offsets.back() + layerSize + 16 > container.size())
     {
-        encryptFile(container, passwords, offsets);
+        encryptFile(&container, passwords, offsets);
         return HeaderSizeInvalid;
     }
 
     //Read archive and encrypt container
     bool success = QuazipFunctions::readZip(container, offsets.back()+16, offsets.back()+16+layerSize, filePath);
-    encryptFile(container, passwords, offsets);
+    encryptFile(&container, passwords, offsets);
     return success ? OK : ZipError;
 }
 
-StatusCode FractalCryptCore::removeLayer(QString containerPath, QStringList passwords)
+FractalCryptCore::StatusCode FractalCryptCore::removeLayer(QString containerPath, QStringList passwords)
 {
     //Open, decrypt and prepare container
     QFile container(containerPath);
     if(!container.open(QIODevice::ReadWrite)) return ContainerUnavailable;
     QVector<qint64> offsets;
-    StatusCode r = decryptFile(container, passwords, offsets);
+    StatusCode r = decryptFile(&container, passwords, offsets);
     if(r != OK) return r;
     container.seek(offsets.back());
 
     //Write noize and encrypt
-    createNoize(container, container.size() - offsets.back());
-    passwords.push_back(generateRandomPassword());
-    encryptFile(container, passwords, offsets);
+    createNoize(&container, container.size() - offsets.back());
+    passwords.push_back("");
+    encryptFile(&container, passwords, offsets);
     return OK;
 }
 
@@ -276,23 +233,23 @@ const QString& FractalCryptCore::getCodeDescription(StatusCode statusCode)
     return map[statusCode];
 }
 
-void FractalCryptCore::writeHeader(QIODevice &file, qint64 offset, quint64 size)
+void FractalCryptCore::writeHeader(QIODevice *file, qint64 offset, quint64 size)
 {
-    file.seek(offset);
-    file.write(signature, 8);
+    file->seek(offset);
+    file->write(signature, 8);
     char sizeBytes[8];
     for(int i = 0; i < 8; ++i)
         sizeBytes[i] = (size >> 8 * (7 - i));
-    file.write(sizeBytes, 8);
+    file->write(sizeBytes, 8);
 }
 
-StatusCode FractalCryptCore::readHeader(QIODevice &file, qint64 offset, qint64 &size)
+FractalCryptCore::StatusCode FractalCryptCore::readHeader(QIODevice *file, qint64 offset, qint64 &size)
 {
-    file.seek(offset);
+    file->seek(offset);
     quint8 headerSignature[8];
     quint8 headerSize[8];
-    file.read((char*)headerSignature, 8);
-    file.read((char*)headerSize, 8);
+    file->read((char*)headerSignature, 8);
+    file->read((char*)headerSize, 8);
     if(strcmp((const char*)headerSignature, signature) != 0)
         return SignatureInvalid;
     size = 0;

@@ -43,7 +43,7 @@ void ResizeContainerWindow::resizeButtonClicked()
     if(newSize <= 0) return;
     newSize *= qPow(1024, ui->comboBox->currentIndex() + 1);
 
-    FractalCryptCore::StatusCode r = FractalCryptCore::resizeFile(containerPath, passwords, newSize);
+    FractalCryptCore::StatusCode r = FractalCryptCore::Instance().resizeFile(containerPath, passwords, newSize);
 
     if(r == FractalCryptCore::OK)
     {

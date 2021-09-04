@@ -13,12 +13,14 @@ unix:LIBS += /usr/lib/x86_64-linux-gnu/libz.a
 unix:LIBS += /usr/lib/x86_64-linux-gnu/libcrypto.a
 
 SOURCES += \
+    aes.cpp \
     archivewindow.cpp \
     createcontainerwindow.cpp \
     directorysizecalculator.cpp \
     fractalcryptcore.cpp \
     main.cpp \
     mainwindow.cpp \
+    progressdialog.cpp \
     quazip/JlCompress.cpp \
     quazip/qioapi.cpp \
     quazip/quaadler32.cpp \
@@ -37,11 +39,14 @@ SOURCES += \
     startwindow.cpp
 
 HEADERS += \
+    aes.h \
     archivewindow.h \
     createcontainerwindow.h \
     directorysizecalculator.h \
     fractalcryptcore.h \
     mainwindow.h \
+    noizecreator.hpp \
+    progressdialog.h \
     quazip/JlCompress.h \
     quazip/crypt.h \
     quazip/ioapi.h \
@@ -66,6 +71,7 @@ FORMS += \
     archivewindow.ui \
     createcontainerwindow.ui \
     mainwindow.ui \
+    progressdialog.ui \
     resizecontainerwindow.ui \
     startwindow.ui
 	

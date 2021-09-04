@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QFile>
 #include <QDataStream>
-#include <QRandomGenerator>
 #include <QCryptographicHash>
 #include <QDir>
 #include <QMap>
@@ -14,10 +13,23 @@
 #include <openssl/err.h>
 
 #include "quazipfunctions.h"
+#include "progressdialog.h"
+#include "aes.h"
+#include "noizecreator.hpp"
 
-namespace FractalCryptCore
+class FractalCryptCore
 {
-    static constexpr char signature[8] = "fractal";
+    QEventLoop *loop;
+    ProgressDialog *progressDialog;
+    NoizeCreator *noizeCreator;
+    AES *aes;
+
+    FractalCryptCore();
+    ~FractalCryptCore();
+    FractalCryptCore(const FractalCryptCore&);
+    FractalCryptCore& operator=(const FractalCryptCore&);
+
+public:
 
     enum StatusCode
     {
@@ -31,23 +43,24 @@ namespace FractalCryptCore
         NewSizeTooSmall
     };
 
-    void createNoize(QIODevice &iodevice, qint64 bytes);
-    QByteArray generateRandomPassword();
-    const QString& getCodeDescription(StatusCode statusCode);
+    static constexpr char signature[8] = "fractal";
+
+    static FractalCryptCore& Instance();
+
+    void createNoize(QIODevice *iodevice, qint64 bytes);
+
+    static const QString& getCodeDescription(StatusCode statusCode);
 
     StatusCode writeLayer(QString containerPath, QStringList files, QStringList directories, QStringList passwords, QString newPassword);
     StatusCode readLayer(QString containerPath, QString filePath, QStringList passwords);
     StatusCode removeLayer(QString containerPath, QStringList passwords);
 
-    StatusCode encryptFile(QIODevice &file, QStringList passwords, const QVector<qint64> &offsets);
-    StatusCode decryptFile(QIODevice &file, QStringList passwords, QVector<qint64> &offsets);
+    StatusCode encryptFile(QIODevice *file, QStringList passwords, const QVector<qint64> &offsets);
+    StatusCode decryptFile(QIODevice *file, QStringList passwords, QVector<qint64> &offsets);
     StatusCode resizeFile(QString path, QStringList passwords, qint64 newSize);
 
-    bool encryptFilePart(QIODevice &file, qint64 pos, qint64 end, const QByteArray &key);
-    bool decryptFilePart(QIODevice &file, qint64 pos, qint64 end, const QByteArray &key);
-
-    void writeHeader(QIODevice &file, qint64 offset, quint64 size);
-    StatusCode readHeader(QIODevice &file, qint64 offset, qint64 &size);
+    static void writeHeader(QIODevice *file, qint64 offset, quint64 size);
+    static StatusCode readHeader(QIODevice *file, qint64 offset, qint64 &size);
 };
 
 #endif // FRACTALCRYPTCORE_H

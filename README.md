@@ -1,7 +1,7 @@
 <div align="center">
   <h1>
   <br>
-  <img src="https://i.ibb.co/9gt2skv/logo.png" alt="Markdownify" width="200">
+  <img src="https://raw.githubusercontent.com/zorggish/FractalCryptGUI/master/logo.png" alt="Markdownify" width="200">
   <br>
   FractalCrypt
   <br>

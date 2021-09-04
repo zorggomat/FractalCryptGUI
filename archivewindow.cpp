@@ -131,7 +131,7 @@ void ArchiveWindow::createLayerButton()
         else files.push_back(path);
     }
 
-    FractalCryptCore::StatusCode r = FractalCryptCore::writeLayer(containerPath, files, directories, passwords, newPassword);
+    FractalCryptCore::StatusCode r = FractalCryptCore::Instance().writeLayer(containerPath, files, directories, passwords, newPassword);
     if(r == FractalCryptCore::OK)
     {
         QMessageBox::about(nullptr, "Result", FractalCryptCore::getCodeDescription(r));
