@@ -12,10 +12,11 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 
-#include "quazipfunctions.h"
-#include "progressdialog.h"
-#include "aes.h"
-#include "noizecreator.hpp"
+#include "core/quazipfunctions.h"
+#include "core/aes.h"
+#include "core/noizecreator.hpp"
+
+#include "widgets/progressdialog.h"
 
 class FractalCryptCore
 {

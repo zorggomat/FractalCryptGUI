@@ -13,14 +13,17 @@ unix:LIBS += /usr/lib/x86_64-linux-gnu/libz.a
 unix:LIBS += /usr/lib/x86_64-linux-gnu/libcrypto.a
 
 SOURCES += \
-    aes.cpp \
-    archivewindow.cpp \
-    createcontainerwindow.cpp \
-    directorysizecalculator.cpp \
-    fractalcryptcore.cpp \
     main.cpp \
-    mainwindow.cpp \
-    progressdialog.cpp \
+    core/aes.cpp \
+    core/directorysizecalculator.cpp \
+    core/fractalcryptcore.cpp \
+    core/quazipfunctions.cpp \
+    widgets/archivewindow.cpp \
+    widgets/createcontainerwindow.cpp \
+    widgets/mainwindow.cpp \
+    widgets/progressdialog.cpp \
+    widgets/resizecontainerwindow.cpp \
+    widgets/startwindow.cpp \
     quazip/JlCompress.cpp \
     quazip/qioapi.cpp \
     quazip/quaadler32.cpp \
@@ -33,20 +36,21 @@ SOURCES += \
     quazip/quazipfileinfo.cpp \
     quazip/quazipnewinfo.cpp \
     quazip/unzip.c \
-    quazip/zip.c \
-    quazipfunctions.cpp \
-    resizecontainerwindow.cpp \
-    startwindow.cpp
+    quazip/zip.c
+
 
 HEADERS += \
-    aes.h \
-    archivewindow.h \
-    createcontainerwindow.h \
-    directorysizecalculator.h \
-    fractalcryptcore.h \
-    mainwindow.h \
-    noizecreator.hpp \
-    progressdialog.h \
+    core/aes.h \
+    core/directorysizecalculator.h \
+    core/fractalcryptcore.h \
+    core/noizecreator.hpp \
+    core/quazipfunctions.h \
+    widgets/archivewindow.h \
+    widgets/createcontainerwindow.h \
+    widgets/resizecontainerwindow.h \
+    widgets/startwindow.h \
+    widgets/mainwindow.h \
+    widgets/progressdialog.h \
     quazip/JlCompress.h \
     quazip/crypt.h \
     quazip/ioapi.h \
@@ -62,18 +66,15 @@ HEADERS += \
     quazip/quazipfileinfo.h \
     quazip/quazipnewinfo.h \
     quazip/unzip.h \
-    quazip/zip.h \
-    quazipfunctions.h \
-    resizecontainerwindow.h \
-    startwindow.h
+    quazip/zip.h
 
 FORMS += \
-    archivewindow.ui \
-    createcontainerwindow.ui \
-    mainwindow.ui \
-    progressdialog.ui \
-    resizecontainerwindow.ui \
-    startwindow.ui
+    ui/archivewindow.ui \
+    ui/createcontainerwindow.ui \
+    ui/mainwindow.ui \
+    ui/progressdialog.ui \
+    ui/resizecontainerwindow.ui \
+    ui/startwindow.ui
 	
 unix:LIBS += -ldl
 

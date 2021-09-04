@@ -1,10 +1,11 @@
 #include <QApplication>
 #include <QDateTime>
 
-#include "startwindow.h"
-#include "mainwindow.h"
-#include "fractalcryptcore.h"
-#include "quazipfunctions.h"
+#include "core/fractalcryptcore.h"
+#include "core/quazipfunctions.h"
+
+#include "widgets/startwindow.h"
+#include "widgets/mainwindow.h"
 
 int main(int argc, char *argv[])
 {

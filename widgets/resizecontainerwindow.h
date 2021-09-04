@@ -6,7 +6,7 @@
 #include <QtMath>
 #include <QMessageBox>
 
-#include "fractalcryptcore.h"
+#include "core/fractalcryptcore.h"
 
 namespace Ui { class ResizeContainerWindow; }
 

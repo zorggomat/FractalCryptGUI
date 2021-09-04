@@ -7,8 +7,8 @@
 #include <QMessageBox>
 #include <QThreadPool>
 
-#include "fractalcryptcore.h"
-#include "directorysizecalculator.h"
+#include "core/fractalcryptcore.h"
+#include "core/directorysizecalculator.h"
 
 namespace Ui { class ArchiveWindow; }
 

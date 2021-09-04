@@ -7,7 +7,7 @@
 #include <QMessageBox>
 #include <QtMath>
 
-#include "fractalcryptcore.h"
+#include "core/fractalcryptcore.h"
 
 namespace Ui { class CreateContainerWindow; }
 
