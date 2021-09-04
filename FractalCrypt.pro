@@ -8,6 +8,8 @@ DEFINES += QUAZIP_STATIC
 
 win32:INCLUDEPATH += C:/OpenSSL-Win64/include
 win32:LIBS += -LC:/OpenSSL-Win64/lib/ -llibcrypto
+win32:RC_ICONS = logo.ico
+win32:QMAKE_TARGET_DESCRIPTION = FractalCrypt
 
 unix:LIBS += /usr/lib/x86_64-linux-gnu/libz.a
 unix:LIBS += /usr/lib/x86_64-linux-gnu/libcrypto.a
