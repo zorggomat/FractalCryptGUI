@@ -1,7 +1,7 @@
 <div align="center">
   <h1>
   <br>
-  <img src="https://raw.githubusercontent.com/zorggish/FractalCryptGUI/master/logo.png" alt="Markdownify" width="200">
+  <img alt="logo" src="https://raw.githubusercontent.com/zorggish/FractalCryptGUI/master/logo.png" alt="Markdownify" width="200">
   <br>
   FractalCrypt
   <br>
@@ -9,16 +9,16 @@
   
   <h4>Free cryptoarchiver permitting any number of hidden volumes for deniable encryption</h4>
 
-  <img src="https://forthebadge.com/images/badges/made-with-c-plus-plus.svg">
-  <img src="https://forthebadge.com/images/badges/powered-by-qt.svg">
-  <img src="https://forthebadge.com/images/badges/built-with-love.svg">
+  <img alt="Made with C++ badge" src="https://forthebadge.com/images/badges/made-with-c-plus-plus.svg">
+  <img alt="Powered by QT badge" src="https://forthebadge.com/images/badges/powered-by-qt.svg">
+  <img alt="Built with love badge" src="https://forthebadge.com/images/badges/built-with-love.svg">
   <br>
-  <img src="https://img.shields.io/travis/zorggish/FractalCryptGUI?style=flat-square">
-  <img src="https://img.shields.io/github/stars/zorggish/FractalCryptGUI?style=flat-square">
-  <img src="https://img.shields.io/codacy/grade/98d263fe8c7b4f879f2e365b94f80d75?style=flat-square">
-  <img src="https://img.shields.io/github/license/zorggish/FractalCryptGUI?style=flat-square">
-  <img src="https://img.shields.io/github/languages/code-size/zorggish/FractalCryptGUI?style=flat-square">
-  <img src="https://img.shields.io/badge/contributions-welcome!-success?style=flat-square">
+  <img alt="Travis autobuild shield" src="https://img.shields.io/travis/zorggish/FractalCryptGUI?style=flat-square">
+  <img alt="Star counter shield" src="https://img.shields.io/github/stars/zorggish/FractalCryptGUI?style=flat-square">
+  <img alt="Code grade shield" src="https://img.shields.io/codacy/grade/98d263fe8c7b4f879f2e365b94f80d75?style=flat-square">
+  <img alt="License shield" src="https://img.shields.io/github/license/zorggish/FractalCryptGUI?style=flat-square">
+  <img alt="Code size shield" src="https://img.shields.io/github/languages/code-size/zorggish/FractalCryptGUI?style=flat-square">
+  <img alt="Contribuions shield" src="https://img.shields.io/badge/contributions-welcome!-success?style=flat-square">
 </div>
 <br>
 
@@ -37,7 +37,7 @@ In addition, a file encrypted in such a way, unlike, let us say, a cryptocontain
 ## How does FractalCrypt work?
 First, it creates a cryptocontainer of a user-specified size, filled with random characters. To create the first volume, the program archives the user-specified files to the beginning of the cryptocontainer and encrypts it using the first key. Thus, knowing the first key, you can access the first-layer files and the rest of the cryptocontainer.
 
-<div align="center"><img src="https://i.ibb.co/FqY309M/file-struct.png"></div>
+<div align="center"><img alt="Cryptocontainer structure" src="https://i.ibb.co/FqY309M/file-struct.png"></div>
 
 To create the second volume, the program will archive the files in the rest of the cryptocontainer and encrypt it with the second key; So, the first key is also needed to create or access data from the second volume.
 
@@ -53,10 +53,10 @@ The user can also delete a layer, in this case it is overwritten with noise; All
 ## Screenshots
 <details>
   <summary>Show</summary>
-  <p>Startup window</p><img src="https://i.ibb.co/qyNXL68/1.png"><br>
-  <p>Creating new container</p><img src="https://i.ibb.co/LxFWNx2/2.png"><br>
-  <p>Main window. Two passwords are entered, so it is possible to get the files of the second volume or create a third one </p><br><img src="https://i.ibb.co/gvXXJSZ/3.png">
-  <p>Archive creation window</p><img src="https://i.ibb.co/7tNHd3v/4.png"><br>
+  <p>Startup window</p><img alt="Startup window screenshot" src="https://i.ibb.co/qyNXL68/1.png"><br>
+  <p>Creating new container</p><img alt="Creating new container window screenshot" src="https://i.ibb.co/LxFWNx2/2.png"><br>
+  <p>Main window. Two passwords are entered, so it is possible to get the files of the second volume or create a third one </p><br><img alt="Main window screenshot" src="https://i.ibb.co/gvXXJSZ/3.png">
+  <p>Archive creation window</p><img alt="Archive creation window screenshot" src="https://i.ibb.co/7tNHd3v/4.png"><br>
 </details>
 
 ## Technical details 
@@ -70,10 +70,10 @@ Each layer, when decrypted, has the following header:
 
 ## Contributing
 
-PR and contributions are welcomed. If you have a contribution in mind, please check out the [Contribution Guide](https://github.com/zorggish/FractalCryptGUI/blob/master/CONTRIBUTING.md) for information on how to do so.
+PRs and contributions are welcomed. If you have a contribution in mind, please check out the [Contribution Guide](https://github.com/zorggish/FractalCryptGUI/blob/master/CONTRIBUTING.md) for information on how to do so.
 
-## Building
-FractalCrypt uses the [Qt framework](https://account.qt.io/downloads)(downloading from the official site requires registration), the [OpenSSL library](https://www.openssl.org/) for encryption, and the [QuaZip library](http://quazip.sourceforge.net/) for Zip archives creation.
+## Building from sources
+FractalCrypt uses the [Qt framework](https://account.qt.io/downloads) (downloading from the official site requires registration), the [OpenSSL library](https://www.openssl.org/) for encryption, and the [QuaZip library](http://quazip.sourceforge.net/) for creation and processing ZIP archives.
 
 QuaZip is a wrapper over the Gilles Vollant's Minizip package (according to the license terms, we inform that the files of these libraries have been changed in our project) which uses the [zlib library](https://www.zlib.net/).
 
@@ -103,7 +103,7 @@ sudo apt-get install qt5-default qt5-qmake qtbase5-dev-tools qtchooser libqt5cor
 git clone https://github.com/zorggish/FractalCryptGUI.git
 cd FractalCrypt
 ```
-3. Build and run project
+3. Build and run the project
 ```
 qmake -project
 qmake FractalCrypt.pro
