@@ -102,7 +102,7 @@ sudo apt-get install qt5-default qt5-qmake qtbase5-dev-tools qtchooser libqt5cor
 2. Clone this repo
 ```
 git clone https://github.com/zorggish/FractalCryptGUI.git
-cd FractalCrypt
+cd FractalCryptGUI
 ```
 3. Build and run the project
 ```
