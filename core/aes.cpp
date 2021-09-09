@@ -41,7 +41,7 @@ void AES::run()
 
 bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *key)
 {
-    QByteArray hashedKey = QCryptographicHash::hash(*key, QCryptographicHash::Sha256);
+    QByteArray hashedKey = QCryptographicHash::hash(*key, QCryptographicHash::Sha512);
     QByteArray iv = QCryptographicHash::hash(*key, QCryptographicHash::Md5);
 
     file->seek(pos);
@@ -59,17 +59,19 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if(!ctx) return false;
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (unsigned char*)hashedKey.data(), (unsigned char*)iv.data())) return false;
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_xts(), NULL, (unsigned char*)hashedKey.data(), NULL)) return false;
 
     for(int i = 0; i < parts; ++i)
     {
         file->read((char*)buffer, bufferSize);
+        if(1 != EVP_EncryptInit_ex(ctx, NULL, NULL, NULL, (unsigned char*)iv.data())) return false;
         if(1 != EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, bufferSize)) return false;
         file->seek(pos + i * bufferSize);
         file->write((char*)outBuffer, bufferSize);
         emit updateValue(i);
     }
     file->read((char*)buffer, additional);
+    if(1 != EVP_EncryptInit_ex(ctx, NULL, NULL, NULL, (unsigned char*)iv.data())) return false;
     if(1 != EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, additional)) return false;
     file->seek(pos + parts * bufferSize);
     file->write((char*)outBuffer, additional);
@@ -83,7 +85,7 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
 
 bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *key)
 {
-    QByteArray hashedKey = QCryptographicHash::hash(*key, QCryptographicHash::Sha256);
+    QByteArray hashedKey = QCryptographicHash::hash(*key, QCryptographicHash::Sha512);
     QByteArray iv = QCryptographicHash::hash(*key, QCryptographicHash::Md5);
 
     file->seek(pos);
@@ -99,23 +101,22 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if(!ctx) return false;
-    if(!EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, (unsigned char*)hashedKey.data(), (unsigned char*)iv.data())) return false;
+    if(!EVP_DecryptInit_ex(ctx, EVP_aes_256_xts(), NULL, (unsigned char*)hashedKey.data(), NULL)) return false;
 
     int len = 0;
 
-    file->read((char*)buffer, 16);
-    if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, 16)) return false;
     for(int i = 0; i < parts; ++i)
     {
-        file->seek(pos + 16 + i * bufferSize);
         file->read((char*)buffer, bufferSize);
+        if(!EVP_DecryptInit_ex(ctx, NULL, NULL, NULL, (unsigned char*)iv.data())) return false;
         if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, bufferSize)) return false;
         file->seek(pos + i * bufferSize);
         file->write((char*)outBuffer, bufferSize);
         emit updateValue(i);
     }
-    file->seek(pos + 16 + parts * bufferSize);
+    file->seek(pos + parts * bufferSize);
     file->read((char*)buffer, additional);
+    if(!EVP_DecryptInit_ex(ctx, NULL, NULL, NULL, (unsigned char*)iv.data())) return false;
     if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, additional)) return false;
     file->seek(pos + parts * bufferSize);
     file->write((char*)outBuffer, len);
