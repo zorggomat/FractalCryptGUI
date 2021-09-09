@@ -48,20 +48,19 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
 
     file->seek(pos);
 
-    qint64 bufferSize = 4096;
+    const qint64 bufferSize = 4096;
     qint64 size = end - pos;
     qint64 parts = size / bufferSize;
     qint64 additional = size % bufferSize;
     emit setMaximumValue(parts);
 
-    unsigned char *buffer = new unsigned char[bufferSize];
-    unsigned char *outBuffer = new unsigned char[bufferSize];
-
-    int len = 0;
-
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if(!ctx) return false;
     if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_xts(), NULL, key, NULL)) return false;
+
+    unsigned char buffer[bufferSize];
+    unsigned char outBuffer[bufferSize];
+    int len = 0;
 
     for(int i = 0; i < parts; ++i)
     {
@@ -79,8 +78,6 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     file->write((char*)outBuffer, additional);
 
     EVP_CIPHER_CTX_free(ctx);
-    delete[] buffer;
-    delete[] outBuffer;
     emit finished();
     return true;
 }
@@ -94,19 +91,18 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
 
     file->seek(pos);
 
+    const qint64 bufferSize = 4096;
     qint64 size = end - pos;
-    qint64 bufferSize = 4096;
     qint64 parts = size / bufferSize;
     qint64 additional = size % bufferSize;
     emit setMaximumValue(parts);
-
-    unsigned char *buffer = new unsigned char[bufferSize];
-    unsigned char *outBuffer = new unsigned char[bufferSize];
 
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if(!ctx) return false;
     if(!EVP_DecryptInit_ex(ctx, EVP_aes_256_xts(), NULL, key, NULL)) return false;
 
+    unsigned char buffer[bufferSize];
+    unsigned char outBuffer[bufferSize];
     int len = 0;
 
     for(int i = 0; i < parts; ++i)
@@ -126,8 +122,6 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     file->write((char*)outBuffer, len);
 
     EVP_CIPHER_CTX_free(ctx);
-    delete[] buffer;
-    delete[] outBuffer;
     emit finished();
     return true;
 }
