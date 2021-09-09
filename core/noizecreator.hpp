@@ -27,15 +27,15 @@ public:
     {
         if(bytes >= 16 * 1024 * 1024) emit started();
         QRandomGenerator random = QRandomGenerator::securelySeeded();
-        char buffer[4096];
-        int parts = bytes / 4096;
-        int additional = bytes % 4096;
+        const int bufferSize = 4096;
+        char buffer[bufferSize];
+        int parts = bytes / bufferSize;
+        int additional = bytes % bufferSize;
         emit setMaximumValue(parts);
         for(int i = 0; i < parts; ++i)
         {
-            for(int j = 0; j < 4096; ++j)
-                 buffer[j] = (char)random.generate();
-            device->write(buffer, 4096);
+            random.fillRange((uint*)buffer, bufferSize / sizeof(uint));
+            device->write(buffer, bufferSize);
             emit updateValue(i);
         }
         for(int j = 0; j < additional; ++j)
