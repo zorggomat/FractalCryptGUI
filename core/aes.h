@@ -25,8 +25,8 @@ class AES : public QObject, public QRunnable
     QIODevice *device;
     qint64 pos, end;
     QByteArray key;
-    bool encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *key);
-    bool decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *key);
+    bool encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password);
+    bool decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password);
 public:
     AES();
     void run();

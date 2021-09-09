@@ -60,7 +60,8 @@ The user can also delete a layer, in this case it is overwritten with noise; All
 </details>
 
 ## Technical details 
-AES-256 is used for encryption in XTS mode. SHA512 hash sum of password in utf8 is used as a key, md5 hash sum is used as an initialization vector (this may be insecure if the same password is used for several volumes).
+AES-256 is used for encryption in XTS mode.
+PBKDF2 is used to generate a key (10k iterations) and an initialization vector (25k iterations).
 
 Each layer, when decrypted, has the following header:
 
