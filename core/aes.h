@@ -25,10 +25,12 @@ class AES : public QObject, public QRunnable
     QIODevice *device;
     qint64 pos, end;
     QByteArray key;
-    bool encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password);
-    bool decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password);
+    EVP_CIPHER_CTX *ctx;
+    bool encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx);
+    bool decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx);
 public:
     AES();
+    ~AES();
     void run();
     void setMode(Mode mode);
     void setIODevice(QIODevice *iodevice);

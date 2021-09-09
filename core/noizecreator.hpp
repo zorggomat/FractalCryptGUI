@@ -33,8 +33,6 @@ public:
         emit setMaximumValue(parts);
         for(int i = 0; i < parts; ++i)
         {
-            for(int j = 0; j < 4096; ++j)
-                buffer[j] = (char)random.generate();
             device->write(buffer, 4096);
             emit updateValue(i);
         }

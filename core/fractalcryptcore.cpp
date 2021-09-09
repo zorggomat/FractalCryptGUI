@@ -28,6 +28,7 @@ FractalCryptCore::~FractalCryptCore()
 {
     delete progressDialog;
     delete noizeCreator;
+    delete aes;
 }
 
 FractalCryptCore& FractalCryptCore::Instance()

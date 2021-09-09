@@ -2,6 +2,12 @@
 
 AES::AES()
 {
+    ctx = EVP_CIPHER_CTX_new();
+}
+
+AES::~AES()
+{
+    EVP_CIPHER_CTX_free(ctx);
 }
 
 void AES::setMode(Mode mode)
@@ -34,12 +40,12 @@ void AES::setPassword(QString password)
 void AES::run()
 {
     if(end - pos >= 16 * 1024 * 1024) emit started();
-    mode == Encrypt ? encryptFilePart(device, pos, end, &key) :
-                      decryptFilePart(device, pos, end, &key) ;
+    mode == Encrypt ? encryptFilePart(device, pos, end, &key, ctx) :
+                      decryptFilePart(device, pos, end, &key, ctx) ;
     emit finished();
 }
 
-bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password)
+bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx)
 {
     unsigned char key[512];
     unsigned char iv[16];
@@ -54,7 +60,6 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     qint64 additional = size % bufferSize;
     emit setMaximumValue(parts);
 
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if(!ctx) return false;
     if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_xts(), NULL, key, NULL)) return false;
 
@@ -77,12 +82,11 @@ bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     file->seek(pos + parts * bufferSize);
     file->write((char*)outBuffer, additional);
 
-    EVP_CIPHER_CTX_free(ctx);
     emit finished();
     return true;
 }
 
-bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password)
+bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx)
 {
     unsigned char key[512];
     unsigned char iv[16];
@@ -97,7 +101,6 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     qint64 additional = size % bufferSize;
     emit setMaximumValue(parts);
 
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if(!ctx) return false;
     if(!EVP_DecryptInit_ex(ctx, EVP_aes_256_xts(), NULL, key, NULL)) return false;
 
@@ -121,7 +124,6 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
     file->seek(pos + parts * bufferSize);
     file->write((char*)outBuffer, len);
 
-    EVP_CIPHER_CTX_free(ctx);
     emit finished();
     return true;
 }
