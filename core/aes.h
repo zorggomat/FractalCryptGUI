@@ -26,6 +26,7 @@ class AES : public QObject, public QRunnable
     qint64 pos, end;
     QByteArray key;
     EVP_CIPHER_CTX *ctx;
+    bool success = true;
     bool encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx);
     bool decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx);
 public:
@@ -36,6 +37,7 @@ public:
     void setIODevice(QIODevice *iodevice);
     void setRange(qint64 pos, qint64 end);
     void setPassword(QString password);
+    bool isSuccess();
 
 signals:
     void started();

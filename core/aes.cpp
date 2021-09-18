@@ -40,8 +40,8 @@ void AES::setPassword(QString password)
 void AES::run()
 {
     if(end - pos >= 16 * 1024 * 1024) emit started();
-    mode == Encrypt ? encryptFilePart(device, pos, end, &key, ctx) :
-                      decryptFilePart(device, pos, end, &key, ctx) ;
+    success = (mode == Encrypt ? encryptFilePart(device, pos, end, &key, ctx) :
+                                 decryptFilePart(device, pos, end, &key, ctx));
     emit finished();
 }
 
@@ -126,4 +126,9 @@ bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteAr
 
     emit finished();
     return true;
+}
+
+bool AES::isSuccess()
+{
+    return success;
 }

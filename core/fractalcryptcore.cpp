@@ -57,6 +57,7 @@ FractalCryptCore::StatusCode FractalCryptCore::encryptFile(QIODevice *file, QStr
         aes->setPassword(passwords[i]);
         QThreadPool::globalInstance()->start(aes);
         loop->exec();
+        if(!aes->isSuccess()) return EncryptionError;
     }
     return OK;
 }
@@ -78,6 +79,7 @@ FractalCryptCore::StatusCode FractalCryptCore::decryptFile(QIODevice *file, QStr
         aes->setPassword(passwords.at(i).toUtf8());
         QThreadPool::globalInstance()->start(aes);
         loop->exec();
+        if(!aes->isSuccess()) return EncryptionError;
 
         //Read header
         qint64 layerSize;
