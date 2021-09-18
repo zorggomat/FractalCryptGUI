@@ -1,8 +1,7 @@
 #include "directorysizecalculator.h"
 
-DirectorySizeCalculator::DirectorySizeCalculator(QString path)
+DirectorySizeCalculator::DirectorySizeCalculator(QString path): directoryPath(path)
 {
-    directoryPath = path;
 }
 
 void DirectorySizeCalculator::run()
