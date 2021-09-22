@@ -90,6 +90,7 @@ void ArchiveWindow::addDirectoryButton()
                 ui->tableWidget->setItem(i, 2, new QTableWidgetItem(getFormattedSize(size)));
                 break;
             }
+        delete QObject::sender();
     });
     pool->start(sizeCalculator);
 }
