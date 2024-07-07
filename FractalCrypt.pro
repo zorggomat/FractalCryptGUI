@@ -1,4 +1,4 @@
-QT       += core gui
+QT += core gui widgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -6,13 +6,16 @@ CONFIG += c++11
 
 DEFINES += QUAZIP_STATIC
 
-win32:INCLUDEPATH += C:/OpenSSL-Win64/include
-win32:LIBS += -LC:/OpenSSL-Win64/lib/ -llibcrypto
-win32:RC_ICONS = logo.ico
-win32:QMAKE_TARGET_DESCRIPTION = FractalCrypt
+win32 {
+    INCLUDEPATH += C:/OpenSSL-Win64/include
+    LIBS += -LC:/OpenSSL-Win64/lib -llibcrypto
+    RC_ICONS = logo.ico
+    QMAKE_TARGET_DESCRIPTION = FractalCrypt
+}
 
-unix:LIBS += /usr/lib/x86_64-linux-gnu/libz.a
-unix:LIBS += /usr/lib/x86_64-linux-gnu/libcrypto.a
+unix {
+    LIBS += -largon2 -ldl -lz -lcrypto
+}
 
 SOURCES += \
     main.cpp \
@@ -40,9 +43,9 @@ SOURCES += \
     quazip/unzip.c \
     quazip/zip.c
 
-
 HEADERS += \
     core/aes.h \
+    core/argon2.h \
     core/directorysizecalculator.h \
     core/fractalcryptcore.h \
     core/noizecreator.hpp \
@@ -77,10 +80,7 @@ FORMS += \
     ui/progressdialog.ui \
     ui/resizecontainerwindow.ui \
     ui/startwindow.ui
-	
-unix:LIBS += -ldl
 
-# Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
