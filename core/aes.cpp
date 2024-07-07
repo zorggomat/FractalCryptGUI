@@ -1,13 +1,31 @@
 #include "aes.h"
+#include <QDebug>
+#include <openssl/rand.h>
+#include <argon2.h>
+#include <QRandomGenerator>
 
-AES::AES()
+AES::AES() : device(nullptr), pos(0), end(0), mode(Encrypt), success(false)
 {
     ctx = EVP_CIPHER_CTX_new();
 }
 
 AES::~AES()
 {
-    EVP_CIPHER_CTX_free(ctx);
+    if (ctx) {
+        EVP_CIPHER_CTX_free(ctx);
+        ctx = nullptr;
+    }
+}
+
+void AES::run()
+{
+    if (end - pos >= 16 * 1024 * 1024)
+        emit started();
+
+    success = (mode == Encrypt ? encryptFilePart(device, pos, end, ctx) :
+                                 decryptFilePart(device, pos, end, ctx));
+
+    emit finished();
 }
 
 void AES::setMode(Mode mode)
@@ -28,107 +46,120 @@ void AES::setRange(qint64 pos, qint64 end)
 
 void AES::setPassword(QString password)
 {
-    if(password.isEmpty())
+    if (password.isEmpty())
     {
         QRandomGenerator *random = QRandomGenerator::global();
         key.resize(32);
         random->generate(key.begin(), key.end());
     }
-    else key = password.toUtf8();
-}
-
-void AES::run()
-{
-    if(end - pos >= 16 * 1024 * 1024) emit started();
-    success = (mode == Encrypt ? encryptFilePart(device, pos, end, &key, ctx) :
-                                 decryptFilePart(device, pos, end, &key, ctx));
-    emit finished();
-}
-
-bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx)
-{
-    unsigned char key[512];
-    unsigned char iv[16];
-    PKCS5_PBKDF2_HMAC_SHA1(password->data(), password->size(), nullptr, 0, 10000, 512, key);
-    PKCS5_PBKDF2_HMAC_SHA1(password->data(), password->size(), nullptr, 0, 25000, 16, iv);
-
-    file->seek(pos);
-
-    const qint64 bufferSize = 4096;
-    qint64 size = end - pos;
-    qint64 parts = size / bufferSize;
-    qint64 additional = size % bufferSize;
-    emit setMaximumValue(parts);
-
-    if(!ctx) return false;
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_xts(), NULL, key, NULL)) return false;
-
-    unsigned char buffer[bufferSize];
-    unsigned char outBuffer[bufferSize];
-    int len = 0;
-
-    for(int i = 0; i < parts; ++i)
+    else
     {
-        file->read((char*)buffer, bufferSize);
-        if(1 != EVP_EncryptInit_ex(ctx, NULL, NULL, NULL, iv)) return false;
-        if(1 != EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, bufferSize)) return false;
-        file->seek(pos + i * bufferSize);
-        file->write((char*)outBuffer, bufferSize);
-        emit updateValue(i);
-    }
-    file->read((char*)buffer, additional);
-    if(1 != EVP_EncryptInit_ex(ctx, NULL, NULL, NULL, iv)) return false;
-    if(1 != EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, additional)) return false;
-    file->seek(pos + parts * bufferSize);
-    file->write((char*)outBuffer, additional);
+        // Using Argon2id to derive key from password
+        const uint32_t t_cost = 4;       // 4 Iterations
+        const uint32_t m_cost = 131072;  // Memory cost of 128MB
+        const uint32_t parallelism = 1;  // Use 1 thread for hashing
 
-    emit finished();
-    return true;
+        QByteArray pwdHash(32, 0);
+        QByteArray salt(16, 0);
+        RAND_bytes(reinterpret_cast<unsigned char*>(salt.data()), salt.size()); // Generate a random salt
+
+        QByteArray secret(password.toUtf8());
+
+        int result = argon2id_hash_raw(t_cost, m_cost, parallelism,
+                                       secret.data(), secret.size(),
+                                       reinterpret_cast<unsigned char*>(salt.data()), salt.size(),
+                                       reinterpret_cast<unsigned char*>(pwdHash.data()), pwdHash.size());
+        if (result != ARGON2_OK)
+        {
+            qDebug() << "Argon2id hashing failed with error code: " << result;
+            return;
+        }
+
+        key = pwdHash; // Use the derived hash as the encryption key
+    }
 }
 
-bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx)
-{
-    unsigned char key[512];
-    unsigned char iv[16];
-    PKCS5_PBKDF2_HMAC_SHA1(password->data(), password->size(), nullptr, 0, 10000, 512, key);
-    PKCS5_PBKDF2_HMAC_SHA1(password->data(), password->size(), nullptr, 0, 25000, 16, iv);
-
-    file->seek(pos);
-
-    const qint64 bufferSize = 4096;
-    qint64 size = end - pos;
-    qint64 parts = size / bufferSize;
-    qint64 additional = size % bufferSize;
-    emit setMaximumValue(parts);
-
-    if(!ctx) return false;
-    if(!EVP_DecryptInit_ex(ctx, EVP_aes_256_xts(), NULL, key, NULL)) return false;
-
-    unsigned char buffer[bufferSize];
-    unsigned char outBuffer[bufferSize];
-    int len = 0;
-
-    for(int i = 0; i < parts; ++i)
-    {
-        file->read((char*)buffer, bufferSize);
-        if(!EVP_DecryptInit_ex(ctx, NULL, NULL, NULL, iv)) return false;
-        if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, bufferSize)) return false;
-        file->seek(pos + i * bufferSize);
-        file->write((char*)outBuffer, bufferSize);
-        emit updateValue(i);
-    }
-    file->seek(pos + parts * bufferSize);
-    file->read((char*)buffer, additional);
-    if(!EVP_DecryptInit_ex(ctx, NULL, NULL, NULL, iv)) return false;
-    if(!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, additional)) return false;
-    file->seek(pos + parts * bufferSize);
-    file->write((char*)outBuffer, len);
-
-    emit finished();
-    return true;
-}
-
-bool AES::isSuccess()
+bool AES::isSuccess() const
 {
     return success;
+}
+
+bool AES::encryptFilePart(QIODevice *file, qint64 pos, qint64 end, EVP_CIPHER_CTX *ctx)
+{
+    unsigned char iv[16];
+    RAND_bytes(iv, sizeof(iv));
+
+    file->seek(pos);
+
+    const qint64 bufferSize = 4096;
+    qint64 size = end - pos;
+    qint64 parts = size / bufferSize;
+    qint64 additional = size % bufferSize;
+    emit setMaximumValue(static_cast<int>(parts));
+
+    if (!EVP_EncryptInit_ex(ctx, EVP_aes_256_xts(), NULL, reinterpret_cast<const unsigned char*>(key.constData()), iv))
+        return false;
+
+    unsigned char buffer[bufferSize];
+    unsigned char outBuffer[bufferSize];
+    int len = 0;
+
+    for (int i = 0; i < parts; ++i)
+    {
+        file->read(reinterpret_cast<char*>(buffer), bufferSize);
+        if (!EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, bufferSize))
+            return false;
+        file->seek(pos + i * bufferSize);
+        file->write(reinterpret_cast<char*>(outBuffer), len);
+        emit updateValue(i);
+    }
+    file->seek(pos + parts * bufferSize);
+    file->read(reinterpret_cast<char*>(buffer), additional);
+    if (!EVP_EncryptUpdate(ctx, outBuffer, &len, buffer, additional))
+        return false;
+    file->seek(pos + parts * bufferSize);
+    file->write(reinterpret_cast<char*>(outBuffer), len);
+
+    emit finished();
+    return true;
+}
+
+bool AES::decryptFilePart(QIODevice *file, qint64 pos, qint64 end, EVP_CIPHER_CTX *ctx)
+{
+    unsigned char iv[16];
+    RAND_bytes(iv, sizeof(iv));
+
+    file->seek(pos);
+
+    const qint64 bufferSize = 4096;
+    qint64 size = end - pos;
+    qint64 parts = size / bufferSize;
+    qint64 additional = size % bufferSize;
+    emit setMaximumValue(static_cast<int>(parts));
+
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_xts(), NULL, reinterpret_cast<const unsigned char*>(key.constData()), iv))
+        return false;
+
+    unsigned char buffer[bufferSize];
+    unsigned char outBuffer[bufferSize];
+    int len = 0;
+
+    for (int i = 0; i < parts; ++i)
+    {
+        file->read(reinterpret_cast<char*>(buffer), bufferSize);
+        if (!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, bufferSize))
+            return false;
+        file->seek(pos + i * bufferSize);
+        file->write(reinterpret_cast<char*>(outBuffer), len);
+        emit updateValue(i);
+    }
+    file->seek(pos + parts * bufferSize);
+    file->read(reinterpret_cast<char*>(buffer), additional);
+    if (!EVP_DecryptUpdate(ctx, outBuffer, &len, buffer, additional))
+        return false;
+    file->seek(pos + parts * bufferSize);
+    file->write(reinterpret_cast<char*>(outBuffer), len);
+
+    emit finished();
+    return true;
 }
