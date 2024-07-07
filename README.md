@@ -61,7 +61,7 @@ The user can also delete a layer, in this case it is overwritten with noise; All
 
 ## Technical details 
 AES-256 is used for encryption in XTS mode.
-PBKDF2 is used to generate a key (10k iterations) and an initialization vector (25k iterations).
+Argon2id is used to generate a key with 4 iterations, 128MB memory cost and 1 thread
 
 Each layer, when decrypted, has the following header:
 
