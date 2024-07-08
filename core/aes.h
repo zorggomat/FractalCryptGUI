@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QRunnable>
 #include <QIODevice>
+#include <QByteArray>
 
 #include <openssl/conf.h>
 #include <openssl/evp.h>
@@ -26,7 +27,7 @@ public:
     void setMode(Mode mode);
     void setIODevice(QIODevice *iodevice);
     void setRange(qint64 pos, qint64 end);
-    void setPassword(QString password);
+    void setPassword(const QString& password);
     bool isSuccess() const;
 
 signals:
