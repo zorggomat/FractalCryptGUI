@@ -4,12 +4,8 @@
 #include <QObject>
 #include <QRunnable>
 #include <QIODevice>
-#include <QCryptographicHash>
-#include <QRandomGenerator>
-
-#include <openssl/conf.h>
+#include <QByteArray>
 #include <openssl/evp.h>
-#include <openssl/err.h>
 
 enum Mode
 {
@@ -24,20 +20,21 @@ class AES : public QObject, public QRunnable
     Mode mode;
     QIODevice *device;
     qint64 pos, end;
-    QByteArray key;
+    QByteArray key, salt, iv;
     EVP_CIPHER_CTX *ctx;
-    bool success = true;
-    bool encryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx);
-    bool decryptFilePart(QIODevice *file, qint64 pos, qint64 end, const QByteArray *password, EVP_CIPHER_CTX *ctx);
+    bool success;
+
+    bool processFile(QIODevice *file, qint64 pos, qint64 end, const QByteArray &key, Mode mode);
+
 public:
     AES();
     ~AES();
-    void run();
+    void run() override;
     void setMode(Mode mode);
     void setIODevice(QIODevice *iodevice);
     void setRange(qint64 pos, qint64 end);
-    void setPassword(QString password);
-    bool isSuccess();
+    void setPassword(const QString &password);
+    bool isSuccess() const;
 
 signals:
     void started();
